@@ -5,17 +5,18 @@
 
 #Libraries####
 library(tidyverse)
-library(ggplot)
+library(ggplot2)
 
 #Data####
 file<-"/Users/GrantAllard/Documents/Data Science/AUTM_Metrics/AUTM STATT Data/AUTM_1991_2017_AllVariables.csv"
 data<-read.csv(file)
+
+#create back up
 data_df<-data
 
 #Clean Data####
 data_df %>% 
-  filter(is.na(X.ID.)) %>% 
-  View
+  filter(is.na(X.ID.)) 
 
 #Remove Totals: 1) Create df of totals, 2) remove from data_df
 Totals<-data_df %>% 
@@ -31,6 +32,34 @@ Confidentials<-data_df %>%
 data_df<-data_df %>% 
   filter(!INSTITUTION=="Confidentials")
 
+#Make Variables Correct Data Types
+str(data_df)
+
+#Subset columns that need to become numeric
+to_numeric<-data_df %>% 
+  select(-YEAR, -X.ID., -INSTITUTION, -MEDSCHL, -STATE, -INSTTYPE) %>% 
+  names()
+
+#Factor columns to character
+data_df[,to_numeric]<-lapply(data_df[,to_numeric],as.character)
+
+#Remove Symbols
+data_df[,to_numeric]<-data.frame(lapply(data_df[,to_numeric],function(x) {
+  gsub("\\$", "", x)
+}))
+data_df[,to_numeric]<-lapply(data_df[,to_numeric],as.character)
+
+#Convert to numeric
+data_df[,to_numeric]<-lapply(data_df[,to_numeric],as.numeric)
+
+#Convert State to Character
+data_df$STATE<-as.character(data_df$STATE)
+
+#Convert Institution to Character
+data_df$INSTITUTION<-as.character(data_df$INSTITUTION)
+
+
+#str(data_df[,to_numeric])
 
 #Quick overview of data####
 
@@ -80,10 +109,20 @@ data_df %>%
   filter(X.ID. %in% LTE_Two$X.ID.) %>%
   View()
 
-#Workshop
+#Build Sample Graphics####
+
+#Federal Spending and Licensing Revenue 
 data_df %>% 
-  filter(str_detect(INSTITUTION, "California")) %>% 
-  View
+  select(INSTITUTION, YEAR, X.ID.,Tot.Res.Exp, Gross.Lic.Inc ) %>% 
+  filter(str_detect(INSTITUTION, "Clemson")) %>% 
+  ggplot(aes(x=YEAR)) +
+  geom_area(aes(y=Tot.Res.Exp, fill="#FF1493"), alpha=.5)+
+  geom_area(aes(y=Gross.Lic.Inc, fill="#7FFFD4"), alpha=1)+
+  scale_fill_discrete(name="Legend",
+                      breaks=c("#FF1493", "#7FFFD4"),
+                      labels=c("Total Research Expenditure", "Gross Licensing Income"))
+
+
 
 #Geographic Exploration#### 
 

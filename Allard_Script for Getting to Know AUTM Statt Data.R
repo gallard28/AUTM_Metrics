@@ -58,6 +58,10 @@ data_df$STATE<-as.character(data_df$STATE)
 #Convert Institution to Character
 data_df$INSTITUTION<-as.character(data_df$INSTITUTION)
 
+names(data_df)
+
+#Big Six
+BigSix<-c("X.ID.","YEAR","INSTITUTION", "MEDSCHL", "STATE", "INSTTYPE", "Tot.Res.Exp","Tot.Discl.Lic","Gross.Lic.Inc", "INVDISRES","New.Pat.App.Fld","St.Ups.Formed")
 
 #str(data_df[,to_numeric])
 
@@ -109,11 +113,40 @@ data_df %>%
   filter(X.ID. %in% LTE_Two$X.ID.) %>%
   View()
 
-#Build Sample Graphics####
+#Build Sample Shiny Graphics####
+#Create df w/ Big Six Variables 
+data_shiny_df<-data_df %>% 
+  select(one_of(BigSix))
 
-#Federal Spending and Licensing Revenue 
-data_df %>% 
-  select(INSTITUTION, YEAR, X.ID.,Tot.Res.Exp, Gross.Lic.Inc ) %>% 
+#Standardize names in dagta
+Institution_df<-data_shiny_df %>% 
+  filter(YEAR == 2017) %>% 
+  select(X.ID., INSTITUTION)
+
+#Disambiguate Names
+data_shiny_df<-left_join(data_shiny_df, Institution_df, by="X.ID.")
+data_shiny_df$INSTITUTION.x<-NULL
+data_shiny_df$INSTITUTION<-data_shiny_df$INSTITUTION.y
+data_shiny_df$INSTITUTION.y<-NULL
+
+#Identify Dependent Variables
+DepVar<-data_shiny_df %>% 
+  select(-X.ID., -YEAR, -INSTITUTION, -MEDSCHL, -STATE, -INSTTYPE) %>% 
+  names()
+
+#Reduce Number of Institutions in Data
+Sample<-c("Albert Einstein College of Medicine Inc.", "Arizona State Univ.", "Clemson Univ.","Georgia Inst. of Technology", "Massachusetts Inst. of Technology (MIT)", "Ohio State Univ.")
+
+data_shiny_df<-data_shiny_df %>% 
+  filter(INSTITUTION %in% Sample)
+
+#Save Data####
+save(data_shiny_df, file="/Users/GrantAllard/Documents/Data Science/AUTM_Metrics/AUTM_Metrics/AUTM_Data_Explorer2/data_shiny_df.Rdata")
+#save(DepVar, file="DepVar.Rdata")
+
+
+#Federal Spending and Licensing Revenue - Graph 
+data_shiny_df %>% 
   filter(str_detect(INSTITUTION, "Clemson")) %>% 
   ggplot(aes(x=YEAR)) +
   geom_area(aes(y=Tot.Res.Exp, fill="#FF1493"), alpha=.5)+
@@ -121,10 +154,6 @@ data_df %>%
   scale_fill_discrete(name="Legend",
                       breaks=c("#FF1493", "#7FFFD4"),
                       labels=c("Total Research Expenditure", "Gross Licensing Income"))
-
-
-
-#Geographic Exploration#### 
 
 
 

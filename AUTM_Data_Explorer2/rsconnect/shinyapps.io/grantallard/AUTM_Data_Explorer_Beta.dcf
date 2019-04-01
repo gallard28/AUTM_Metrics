@@ -1,0 +1,12 @@
+name: AUTM_Data_Explorer_Beta
+title: AUTM_Data_Explorer_Beta
+username:
+account: grantallard
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 829451
+bundleId: 1978836
+url: https://grantallard.shinyapps.io/AUTM_Data_Explorer_Beta/
+when: 1554127735.17905
+asMultiple: FALSE
+asStatic: FALSE
